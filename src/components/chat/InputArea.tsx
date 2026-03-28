@@ -3,14 +3,12 @@ import { Button } from '../ui/Button';
 
 interface InputAreaProps {
   onSend: (text: string) => void;
-  onStop?: () => void;
-  isGenerating?: boolean;
+  isLoading?: boolean;
 }
 
 export const InputArea: React.FC<InputAreaProps> = ({
   onSend,
-  onStop,
-  isGenerating = false,
+  isLoading = false,
 }) => {
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -79,8 +77,13 @@ export const InputArea: React.FC<InputAreaProps> = ({
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Напишите сообщение... (Enter — отправить, Shift+Enter — новая строка)"
+          placeholder={
+            isLoading
+              ? 'Ассистент печатает...'
+              : 'Напишите сообщение... (Enter — отправить, Shift+Enter — новая строка)'
+          }
           rows={1}
+          disabled={isLoading}
           style={{
             flex: 1,
             resize: 'none',
@@ -97,44 +100,24 @@ export const InputArea: React.FC<InputAreaProps> = ({
           }}
         />
 
-        {/* Stop / Send button */}
-        {isGenerating ? (
-          <Button
-            variant="icon"
-            title="Остановить генерацию"
-            onClick={onStop}
-            style={{
-              flexShrink: 0,
-              color: 'var(--color-danger)',
-              border: '1.5px solid var(--color-danger)',
-              borderRadius: 'var(--border-radius-sm)',
-              padding: '6px',
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="4" y="4" width="16" height="16" rx="2" />
-            </svg>
-          </Button>
-        ) : (
-          <Button
-            variant={value.trim() ? 'primary' : 'ghost'}
-            title="Отправить"
-            onClick={handleSend}
-            disabled={!value.trim()}
-            style={{
-              flexShrink: 0,
-              borderRadius: 'var(--border-radius-md)',
-              padding: '7px',
-              height: 'auto',
-              opacity: value.trim() ? 1 : 0.4,
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
-          </Button>
-        )}
+        <Button
+          variant={value.trim() && !isLoading ? 'primary' : 'ghost'}
+          title="Отправить"
+          onClick={handleSend}
+          disabled={!value.trim() || isLoading}
+          style={{
+            flexShrink: 0,
+            borderRadius: 'var(--border-radius-md)',
+            padding: '7px',
+            height: 'auto',
+            opacity: value.trim() && !isLoading ? 1 : 0.4,
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <line x1="22" y1="2" x2="11" y2="13" />
+            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+          </svg>
+        </Button>
       </div>
 
       <p

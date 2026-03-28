@@ -1,11 +1,11 @@
 import React, { useRef, useEffect } from 'react';
 import { Message } from './Message';
-import type { MessageData } from './Message';
+import type { Message as ChatMessage } from '../../types/message';
 import { TypingIndicator } from './TypingIndicator';
 import { EmptyState } from '../ui/ErrorMessage';
 
 interface MessageListProps {
-  messages: MessageData[];
+  messages: ChatMessage[];
   isTyping?: boolean;
 }
 
@@ -14,7 +14,7 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, isTyping = f
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+  }, [messages]);
 
   if (messages.length === 0 && !isTyping) {
     return <EmptyState />;
@@ -34,7 +34,7 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, isTyping = f
       {messages.map((msg) => (
         <Message key={msg.id} message={msg} variant={msg.role} />
       ))}
-      {isTyping && <TypingIndicator isVisible />}
+      <TypingIndicator isVisible={isTyping} />
       <div ref={bottomRef} />
     </div>
   );

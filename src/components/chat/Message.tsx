@@ -2,18 +2,10 @@ import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '../ui/Button';
 import { AssistantAvatar } from '../ui/AssistantAvatar';
-
-export type MessageRole = 'user' | 'assistant';
-
-export interface MessageData {
-  id: string;
-  role: MessageRole;
-  content: string;
-  timestamp: string;
-}
+import type { Message as ChatMessage, MessageRole } from '../../types/message';
 
 interface MessageProps {
-  message: MessageData;
+  message: ChatMessage;
   variant: MessageRole;
 }
 

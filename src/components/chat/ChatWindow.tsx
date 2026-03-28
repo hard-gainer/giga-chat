@@ -1,50 +1,38 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MessageList } from './MessageList';
 import { InputArea } from './InputArea';
-import type { MessageData } from './Message';
+import type { Message as ChatMessage } from '../../types/message';
 import { Button } from '../ui/Button';
 
-const MOCK_MESSAGES: MessageData[] = [
-  {
-    id: '1',
-    role: 'user',
-    content: 'Привет! Можешь объяснить, как работает `useEffect` в React?',
-    timestamp: '14:20',
-  },
-  {
-    id: '2',
-    role: 'assistant',
-    content:
-      'Конечно! `useEffect` — это хук в React, который позволяет выполнять _побочные эффекты_ в функциональных компонентах.\n\nОн принимает два аргумента:\n1. **Функция эффекта** — выполняется после рендера\n2. **Массив зависимостей** — определяет, когда эффект запускается повторно\n\n```typescript\nuseEffect(() => {\n  document.title = `Чат: ${chatName}`;\n}, [chatName]);\n```\n\nЕсли массив зависимостей пустой `[]`, эффект выполнится только один раз при монтировании.',
-    timestamp: '14:21',
-  },
-  {
-    id: '3',
-    role: 'user',
-    content: 'А как правильно делать cleanup в useEffect?',
-    timestamp: '14:22',
-  },
-  {
-    id: '4',
-    role: 'assistant',
-    content:
-      'Для cleanup нужно **вернуть функцию** из эффекта:\n\n```typescript\nuseEffect(() => {\n  const subscription = someAPI.subscribe();\n  \n  return () => {\n    // Cleanup: отписываемся при размонтировании\n    subscription.unsubscribe();\n  };\n}, []);\n```\n\nЭто важно для:\n- Отписки от событий\n- Отмены таймеров (`clearTimeout`)\n- Закрытия WebSocket-соединений',
-    timestamp: '14:23',
-  },
-  {
-    id: '5',
-    role: 'user',
-    content: 'Спасибо! Теперь понятно. Ещё вопрос — в чём разница между useEffect и useLayoutEffect?',
-    timestamp: '14:25',
-  },
-  {
-    id: '6',
-    role: 'assistant',
-    content:
-      'Главное отличие — **время выполнения**:\n\n- `useEffect` — запускается **асинхронно** после того, как браузер отрисовал изменения\n- `useLayoutEffect` — запускается **синхронно** сразу после DOM-мутаций, до отрисовки браузером\n\n**Когда использовать `useLayoutEffect`:**\n- Когда нужно измерить DOM-элементы\n- Когда нужно предотвратить мигание (flash of content)\n\nВ большинстве случаев достаточно `useEffect`.',
-    timestamp: '14:26',
-  },
+const MOCK_ASSISTANT_RESPONSES = [
+  'Хороший вопрос. Могу разобрать это по шагам и показать пример на TypeScript.',
+  'Принял. Сейчас объясню кратко, а затем дам более детальный вариант.',
+  'Давай сделаем так: сначала идея, потом практический пример и чек-лист.',
+  'Понял задачу. Ниже привожу рабочий вариант и пояснения по ключевым моментам.',
 ];
+
+const createId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+const getCurrentTime = () =>
+  new Date().toLocaleTimeString('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+const getMockAssistantReply = (userText: string) => {
+  const normalized = userText.toLowerCase();
+
+  if (normalized.includes('useeffect')) {
+    return 'useEffect запускается после рендера и подходит для побочных эффектов: запросов, подписок, таймеров. Если нужно, покажу шаблон с cleanup.';
+  }
+
+  if (normalized.includes('typescript') || normalized.includes('тип')) {
+    return 'Для TypeScript лучше сразу описывать типы входных и выходных данных. Это снижает количество ошибок и упрощает рефакторинг.';
+  }
+
+  const randomIndex = Math.floor(Math.random() * MOCK_ASSISTANT_RESPONSES.length);
+  return MOCK_ASSISTANT_RESPONSES[randomIndex];
+};
 
 interface ChatWindowProps {
   chatTitle?: string;
@@ -55,8 +43,44 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   chatTitle = 'Помощь с кодом на TypeScript',
   onOpenSettings,
 }) => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const pendingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (pendingTimeoutRef.current) {
+        clearTimeout(pendingTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleSend = (text: string) => {
-    console.log('Send message:', text);
+    if (isLoading) return;
+
+    const userMessage: ChatMessage = {
+      id: createId(),
+      role: 'user',
+      content: text,
+      timestamp: getCurrentTime(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+
+    const delay = 1000 + Math.floor(Math.random() * 1001);
+    pendingTimeoutRef.current = setTimeout(() => {
+      const assistantMessage: ChatMessage = {
+        id: createId(),
+        role: 'assistant',
+        content: getMockAssistantReply(text),
+        timestamp: getCurrentTime(),
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+      setIsLoading(false);
+      pendingTimeoutRef.current = null;
+    }, delay);
   };
 
   return (
@@ -138,10 +162,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       </div>
 
       {/* Messages */}
-      <MessageList messages={MOCK_MESSAGES} isTyping />
+      <MessageList messages={messages} isTyping={isLoading} />
 
       {/* Input */}
-      <InputArea onSend={handleSend} />
+      <InputArea onSend={handleSend} isLoading={isLoading} />
     </div>
   );
 };
