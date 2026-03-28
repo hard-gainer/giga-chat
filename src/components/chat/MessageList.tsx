@@ -3,6 +3,7 @@ import { Message } from './Message';
 import type { Message as ChatMessage } from '../../types/message';
 import { TypingIndicator } from './TypingIndicator';
 import { EmptyState } from '../ui/ErrorMessage';
+import styles from './MessageList.module.css';
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -21,16 +22,7 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, isTyping = f
   }
 
   return (
-    <div
-      style={{
-        flex: 1,
-        overflowY: 'auto',
-        padding: '24px 24px 16px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '16px',
-      }}
-    >
+    <div className={styles.root}>
       {messages.map((msg) => (
         <Message key={msg.id} message={msg} variant={msg.role} />
       ))}

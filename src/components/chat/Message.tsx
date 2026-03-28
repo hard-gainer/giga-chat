@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { Button } from '../ui/Button';
 import { AssistantAvatar } from '../ui/AssistantAvatar';
 import type { Message as ChatMessage, MessageRole } from '../../types/message';
+import styles from './Message.module.css';
 
 interface MessageProps {
   message: ChatMessage;
@@ -10,7 +11,6 @@ interface MessageProps {
 }
 
 export const Message: React.FC<MessageProps> = ({ message, variant }) => {
-  const [hovered, setHovered] = useState(false);
   const [copied, setCopied] = useState(false);
   const isUser = variant === 'user';
 
@@ -22,51 +22,20 @@ export const Message: React.FC<MessageProps> = ({ message, variant }) => {
   };
 
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        display: 'flex',
-        flexDirection: isUser ? 'row-reverse' : 'row',
-        alignItems: 'flex-start',
-        gap: '10px',
-        padding: '4px 0',
-      }}
-    >
+    <div className={`${styles.root} ${isUser ? styles.user : styles.assistant}`}>
       {/* Avatar (only for assistant) */}
       {!isUser && <AssistantAvatar />}
 
       {/* Bubble */}
-      <div style={{ maxWidth: '72%', minWidth: '80px' }}>
+      <div className={styles.content}>
         {/* Sender label */}
-        <div
-          style={{
-            fontSize: 'var(--font-size-xs)',
-            color: 'var(--color-text-secondary)',
-            marginBottom: '4px',
-            textAlign: isUser ? 'right' : 'left',
-            fontWeight: 500,
-          }}
-        >
+        <div className={`${styles.sender} ${isUser ? styles.senderUser : styles.senderAssistant}`}>
           {isUser ? 'Вы' : 'GigaChat'}
         </div>
 
-        <div style={{ position: 'relative' }}>
-          <div
-            style={{
-              padding: '12px 16px',
-              borderRadius: isUser
-                ? 'var(--border-radius-lg) var(--border-radius-lg) var(--border-radius-sm) var(--border-radius-lg)'
-                : 'var(--border-radius-lg) var(--border-radius-lg) var(--border-radius-lg) var(--border-radius-sm)',
-              background: isUser ? 'var(--color-bg-user-msg)' : 'var(--color-bg-assist-msg)',
-              color: isUser ? 'var(--color-text-user-msg)' : 'var(--color-text-assist-msg)',
-              boxShadow: 'var(--shadow-sm)',
-              fontSize: 'var(--font-size-sm)',
-              lineHeight: 1.65,
-              border: isUser ? 'none' : '1px solid var(--color-border)',
-            }}
-          >
-            <div className="markdown-body">
+        <div className={styles.bubbleWrap}>
+          <div className={`${styles.bubble} ${isUser ? styles.bubbleUser : styles.bubbleAssistant}`}>
+            <div className={`${styles.markdownBody} markdown-body`}>
               <ReactMarkdown>{message.content}</ReactMarkdown>
             </div>
           </div>
@@ -76,19 +45,7 @@ export const Message: React.FC<MessageProps> = ({ message, variant }) => {
             variant="icon"
             title={copied ? 'Скопировано!' : 'Копировать'}
             onClick={handleCopy}
-            style={{
-              position: 'absolute',
-              top: '-8px',
-              right: isUser ? 'auto' : '-8px',
-              left: isUser ? '-8px' : 'auto',
-              opacity: hovered ? 1 : 0,
-              transition: 'opacity var(--transition-fast)',
-              background: 'var(--color-bg-primary)',
-              border: '1px solid var(--color-border)',
-              boxShadow: 'var(--shadow-sm)',
-              padding: '4px',
-              color: copied ? 'var(--color-success)' : 'var(--color-text-secondary)',
-            }}
+            className={`${styles.copyBtn} ${isUser ? styles.copyBtnUser : styles.copyBtnAssistant} ${copied ? styles.copied : ''}`}
           >
             {copied ? (
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -104,15 +61,7 @@ export const Message: React.FC<MessageProps> = ({ message, variant }) => {
         </div>
 
         {/* Timestamp */}
-        <div
-          style={{
-            fontSize: 'var(--font-size-xs)',
-            color: 'var(--color-text-secondary)',
-            marginTop: '4px',
-            textAlign: isUser ? 'right' : 'left',
-            opacity: 0.7,
-          }}
-        >
+        <div className={`${styles.timestamp} ${isUser ? styles.timestampUser : styles.timestampAssistant}`}>
           {message.timestamp}
         </div>
       </div>

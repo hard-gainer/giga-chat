@@ -1,14 +1,17 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '../ui/Button';
+import styles from './InputArea.module.css';
 
 interface InputAreaProps {
   onSend: (text: string) => void;
   isLoading?: boolean;
+  onStop?: () => void;
 }
 
 export const InputArea: React.FC<InputAreaProps> = ({
   onSend,
   isLoading = false,
+  onStop,
 }) => {
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -39,30 +42,14 @@ export const InputArea: React.FC<InputAreaProps> = ({
   };
 
   return (
-    <div
-      style={{
-        padding: '12px 24px 20px',
-        background: 'var(--color-bg-chat)',
-        borderTop: '1px solid var(--color-border)',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'flex-end',
-          gap: '8px',
-          background: 'var(--color-bg-input)',
-          border: '1.5px solid var(--color-border-input)',
-          borderRadius: 'var(--border-radius-lg)',
-          padding: '8px 8px 8px 14px',
-          boxShadow: 'var(--shadow-sm)',
-        }}
-      >
+    <div className={styles.container}>
+      <div className={styles.box}>
         {/* Attach image button */}
         <Button
           variant="icon"
           title="Прикрепить изображение"
-          style={{ flexShrink: 0, color: 'var(--color-text-secondary)', marginBottom: '2px' }}
+          className={styles.attachBtn}
+          disabled={isLoading}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -84,51 +71,37 @@ export const InputArea: React.FC<InputAreaProps> = ({
           }
           rows={1}
           disabled={isLoading}
-          style={{
-            flex: 1,
-            resize: 'none',
-            border: 'none',
-            outline: 'none',
-            background: 'transparent',
-            color: 'var(--color-text-primary)',
-            fontSize: 'var(--font-size-sm)',
-            fontFamily: 'var(--font-family)',
-            lineHeight: `${LINE_HEIGHT}px`,
-            padding: '4px 0',
-            overflowY: 'auto',
-            maxHeight: `${MAX_ROWS * LINE_HEIGHT + 20}px`,
-          }}
+          className={styles.textarea}
         />
 
-        <Button
-          variant={value.trim() && !isLoading ? 'primary' : 'ghost'}
-          title="Отправить"
-          onClick={handleSend}
-          disabled={!value.trim() || isLoading}
-          style={{
-            flexShrink: 0,
-            borderRadius: 'var(--border-radius-md)',
-            padding: '7px',
-            height: 'auto',
-            opacity: value.trim() && !isLoading ? 1 : 0.4,
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-            <line x1="22" y1="2" x2="11" y2="13" />
-            <polygon points="22 2 15 22 11 13 2 9 22 2" />
-          </svg>
-        </Button>
+        {isLoading ? (
+          <Button
+            variant="icon"
+            title="Остановить генерацию"
+            onClick={onStop}
+            className={`${styles.stopBtn} ${styles.sendBtn}`}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="4" y="4" width="16" height="16" rx="2" />
+            </svg>
+          </Button>
+        ) : (
+          <Button
+            variant={value.trim() ? 'primary' : 'ghost'}
+            title="Отправить"
+            onClick={handleSend}
+            disabled={!value.trim()}
+            className={`${styles.sendBtn} ${!value.trim() ? styles.sendBtnDisabled : ''}`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+          </Button>
+        )}
       </div>
 
-      <p
-        style={{
-          fontSize: 'var(--font-size-xs)',
-          color: 'var(--color-text-secondary)',
-          marginTop: '8px',
-          textAlign: 'center',
-          opacity: 0.7,
-        }}
-      >
+      <p className={styles.hint}>
         GigaChat может совершать ошибки. Проверяйте важную информацию.
       </p>
     </div>

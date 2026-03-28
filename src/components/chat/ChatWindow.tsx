@@ -3,6 +3,7 @@ import { MessageList } from './MessageList';
 import { InputArea } from './InputArea';
 import type { Message as ChatMessage } from '../../types/message';
 import { Button } from '../ui/Button';
+import styles from './ChatWindow.module.css';
 
 const MOCK_ASSISTANT_RESPONSES = [
   'Хороший вопрос. Могу разобрать это по шагам и показать пример на TypeScript.',
@@ -83,63 +84,29 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     }, delay);
   };
 
+  const handleStop = () => {
+    if (pendingTimeoutRef.current) {
+      clearTimeout(pendingTimeoutRef.current);
+      pendingTimeoutRef.current = null;
+    }
+    setIsLoading(false);
+  };
+
   return (
-    <div
-      style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: 'var(--color-bg-chat)',
-        overflow: 'hidden',
-      }}
-    >
+    <div className={styles.root}>
       {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '16px 24px',
-          borderBottom: '1px solid var(--color-border)',
-          background: 'var(--color-bg-primary)',
-          flexShrink: 0,
-          boxShadow: 'var(--shadow-sm)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-          <div
-            style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, var(--color-accent) 0%, #a78bfa 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
+      <div className={styles.header}>
+        <div className={styles.headerLeft}>
+          <div className={styles.headerAvatar}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
           </div>
-          <div style={{ minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: 'var(--font-size-md)',
-                fontWeight: 600,
-                color: 'var(--color-text-primary)',
-                overflow: 'hidden',
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-              }}
-            >
+          <div className={styles.titleWrap}>
+            <div className={styles.title}>
               {chatTitle}
             </div>
-            <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-success)', fontWeight: 500 }}>
-              ● Онлайн
-            </div>
+            <div className={styles.status}>● Онлайн</div>
           </div>
         </div>
 
@@ -147,12 +114,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           variant="icon"
           title="Настройки"
           onClick={onOpenSettings}
-          style={{
-            color: 'var(--color-text-secondary)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--border-radius-sm)',
-            padding: '7px',
-          }}
+          className={styles.settingsBtn}
         >
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="3" />
@@ -165,7 +127,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       <MessageList messages={messages} isTyping={isLoading} />
 
       {/* Input */}
-      <InputArea onSend={handleSend} isLoading={isLoading} />
+      <InputArea onSend={handleSend} isLoading={isLoading} onStop={handleStop} />
     </div>
   );
 };

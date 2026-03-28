@@ -1,0 +1,42 @@
+.label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.track {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  border: none;
+  background: var(--color-border);
+  border-radius: var(--border-radius-pill);
+  transition: background var(--transition-fast);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.trackOn {
+  background: var(--color-accent);
+}
+
+.thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: transform var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.thumbOn {
+  transform: translateX(20px);
+}

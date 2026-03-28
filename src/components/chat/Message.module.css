@@ -1,0 +1,124 @@
+.root {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.user {
+  flex-direction: row-reverse;
+}
+
+.assistant {
+  flex-direction: row;
+}
+
+.content {
+  max-width: min(72%, 720px);
+  min-width: 80px;
+}
+
+.sender {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.senderUser {
+  text-align: right;
+}
+
+.senderAssistant {
+  text-align: left;
+}
+
+.bubbleWrap {
+  position: relative;
+}
+
+.bubble {
+  padding: 12px 16px;
+  box-shadow: var(--shadow-sm);
+  font-size: var(--font-size-sm);
+  line-height: 1.65;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.bubbleUser {
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) var(--border-radius-sm) var(--border-radius-lg);
+  background: var(--color-bg-user-msg);
+  color: var(--color-text-user-msg);
+}
+
+.bubbleAssistant {
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) var(--border-radius-lg) var(--border-radius-sm);
+  background: var(--color-bg-assist-msg);
+  color: var(--color-text-assist-msg);
+  border: 1px solid var(--color-border);
+}
+
+.copyBtn {
+  position: absolute;
+  top: -8px;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  padding: 4px;
+  color: var(--color-text-secondary);
+}
+
+.copyBtnAssistant {
+  right: -8px;
+}
+
+.copyBtnUser {
+  left: -8px;
+}
+
+.bubbleWrap:hover .copyBtn,
+.bubbleWrap:focus-within .copyBtn {
+  opacity: 1;
+}
+
+.copied {
+  color: var(--color-success);
+}
+
+.timestamp {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+.timestampUser {
+  text-align: right;
+}
+
+.timestampAssistant {
+  text-align: left;
+}
+
+.markdownBody :global(p:last-child) {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .content {
+    max-width: calc(100% - 44px);
+  }
+
+  .bubble {
+    padding: 10px 12px;
+  }
+}
+
+@media (hover: none) {
+  .copyBtn {
+    opacity: 1;
+  }
+}

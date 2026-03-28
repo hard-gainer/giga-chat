@@ -1,0 +1,19 @@
+.themeToggleWrap {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 130;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 8px 10px;
+}
+
+@media (max-width: 768px) {
+  .themeToggleWrap {
+    top: 10px;
+    right: 10px;
+    padding: 6px 8px;
+  }
+}
