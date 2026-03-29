@@ -59,6 +59,16 @@
   border: 1px solid var(--color-border);
 }
 
+.bubbleAssistant .markdownBody {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.bubbleAssistant .markdownBody :global(pre),
+.bubbleAssistant .markdownBody :global(code) {
+  text-align: left;
+}
+
 .copyBtn {
   position: absolute;
   top: -8px;
