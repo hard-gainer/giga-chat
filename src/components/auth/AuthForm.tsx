@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/Button';
 import { ErrorMessage } from '../ui/ErrorMessage';
-
-export type Scope = 'GIGACHAT_API_PERS' | 'GIGACHAT_API_B2B' | 'GIGACHAT_API_CORP';
+import type { Scope } from '../../api/gigachat';
 
 interface AuthFormProps {
   onLogin: (credentials: string, scope: Scope) => void;

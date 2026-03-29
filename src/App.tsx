@@ -1,33 +1,38 @@
 import { useState, useEffect } from 'react';
-import { AppLayout } from './components/layout/AppLayout';
-import { AuthForm, type Scope } from './components/auth/AuthForm';
+import { RouterProvider } from 'react-router-dom';
+import { AuthForm } from './components/auth/AuthForm';
 import { Toggle } from './components/ui/Toggle';
 import appStyles from './App.module.css';
+import { ChatProvider } from './app/providers/ChatProvider';
+import { appRouter } from './app/router/routes';
+import type { GigaChatAuthConfig, Scope } from './api/gigachat';
 import './styles/theme.css';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [auth, setAuth] = useState<GigaChatAuthConfig | null>(null);
   const [isDarkTheme, setIsDarkTheme] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
   }, [isDarkTheme]);
 
-  const handleLogin = (_credentials: string, _scope: Scope) => {
-    setIsAuthenticated(true);
+  const handleLogin = (credentials: string, scope: Scope) => {
+    setAuth({ credentials, scope });
   };
 
-  if (!isAuthenticated) {
+  if (!auth) {
     return <AuthForm onLogin={handleLogin} />;
   }
 
   return (
-    <>
-      <div className={appStyles.themeToggleWrap}>
-        <Toggle checked={isDarkTheme} onChange={setIsDarkTheme} label="Тёмная тема" />
-      </div>
-      <AppLayout isDarkTheme={isDarkTheme} onThemeChange={setIsDarkTheme} />
-    </>
+    <ChatProvider auth={auth}>
+      <>
+        <div className={appStyles.themeToggleWrap}>
+          <Toggle checked={isDarkTheme} onChange={setIsDarkTheme} label="Тёмная тема" />
+        </div>
+        <RouterProvider router={appRouter} />
+      </>
+    </ChatProvider>
   );
 }
 

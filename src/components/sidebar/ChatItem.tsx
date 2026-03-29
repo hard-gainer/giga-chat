@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/Button';
-
-export interface Chat {
-  id: string;
-  title: string;
-  lastMessageDate: string;
-  isActive?: boolean;
-}
+import type { Chat } from '../../types/chat';
 
 interface ChatItemProps {
   chat: Chat;
@@ -18,6 +12,13 @@ interface ChatItemProps {
 
 export const ChatItem: React.FC<ChatItemProps> = ({ chat, isActive, onSelect, onEdit, onDelete }) => {
   const [hovered, setHovered] = useState(false);
+  const lastMessage = chat.messages[chat.messages.length - 1];
+  const lastMessageDate = new Date(chat.updatedAt).toLocaleString('ru-RU', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
   return (
     <div
@@ -60,9 +61,12 @@ export const ChatItem: React.FC<ChatItemProps> = ({ chat, isActive, onSelect, on
             fontSize: 'var(--font-size-xs)',
             color: 'var(--color-text-sidebar-secondary)',
             marginTop: '2px',
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis',
           }}
         >
-          {chat.lastMessageDate}
+          {lastMessage?.content || lastMessageDate}
         </div>
       </div>
 

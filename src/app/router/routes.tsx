@@ -1,40 +1,61 @@
-import React, { useState } from 'react';
-import { Sidebar } from '../sidebar/Sidebar';
-import { ChatWindow } from '../chat/ChatWindow';
-import { SettingsPanel } from '../settings/SettingsPanel';
-import { Button } from '../ui/Button';
-import type { Chat } from '../../types/chat';
+import React, { useEffect, useState } from 'react';
+import { createBrowserRouter, useNavigate, useParams } from 'react-router-dom';
+import { ChatWindow } from '../../components/chat/ChatWindow';
+import { Sidebar } from '../../components/sidebar/Sidebar';
+import { Button } from '../../components/ui/Button';
+import { useChat } from '../providers/ChatProvider';
 
-interface AppLayoutProps {
-  isDarkTheme: boolean;
-  onThemeChange: (dark: boolean) => void;
-}
-
-export const AppLayout: React.FC<AppLayoutProps> = ({ isDarkTheme, onThemeChange }) => {
-  const [activeChatId, setActiveChatId] = useState<string | null>('1');
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+const ChatLayout: React.FC = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { state, createChat, selectChat, renameChat, deleteChat } = useChat();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const chats: Chat[] = [];
+
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+
+    const exists = state.chats.some((chat) => chat.id === id);
+    if (!exists) {
+      navigate('/', { replace: true });
+      return;
+    }
+
+    selectChat(id);
+  }, [id, state.chats, navigate, selectChat]);
+
+  const handleSelectChat = (chatId: string) => {
+    selectChat(chatId);
+    navigate(`/chat/${chatId}`);
+    setIsSidebarOpen(false);
+  };
 
   const handleNewChat = () => {
-    console.log('New chat created');
-    setActiveChatId(null);
+    const chatId = createChat();
+    navigate(`/chat/${chatId}`);
     setIsSidebarOpen(false);
   };
 
-  const handleSelectChat = (id: string) => {
-    setActiveChatId(id);
-    setIsSidebarOpen(false);
+  const handleRenameChat = (chatId: string) => {
+    const chat = state.chats.find((item) => item.id === chatId);
+    const nextTitle = window.prompt('Введите новое название чата', chat?.title ?? '');
+    if (nextTitle === null) return;
+    renameChat(chatId, nextTitle);
   };
 
-  const chatTitles: Record<string, string> = {
-    '1': 'Помощь с кодом на TypeScript',
-    '2': 'Анализ данных и визуализация',
-    '3': 'Перевод документации по React',
-    '4': 'Написание юнит-тестов Jest',
-    '5': 'Оптимизация SQL-запросов',
-    '6': 'Обзор кода pull request',
+  const handleDeleteChat = (chatId: string) => {
+    const ok = window.confirm('Удалить этот чат? История будет потеряна.');
+    if (!ok) return;
+
+    const isCurrent = (id ?? state.activeChatId) === chatId;
+    deleteChat(chatId);
+    if (isCurrent) {
+      navigate('/');
+    }
   };
+
+  const chatId = id ?? state.activeChatId;
 
   return (
     <div
@@ -46,7 +67,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ isDarkTheme, onThemeChange
         position: 'relative',
       }}
     >
-      {/* Mobile overlay */}
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
@@ -61,7 +81,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ isDarkTheme, onThemeChange
         />
       )}
 
-      {/* Sidebar */}
       <div
         style={{
           display: 'flex',
@@ -72,16 +91,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ isDarkTheme, onThemeChange
         className="sidebar-wrapper"
       >
         <Sidebar
-          chats={chats}
-          activeChatId={activeChatId}
+          chats={state.chats}
+          activeChatId={chatId}
           onSelectChat={handleSelectChat}
           onNewChat={handleNewChat}
-          onRenameChat={() => undefined}
-          onDeleteChat={() => undefined}
+          onRenameChat={handleRenameChat}
+          onDeleteChat={handleDeleteChat}
         />
       </div>
 
-      {/* Main chat area */}
       <main
         style={{
           flex: 1,
@@ -92,10 +110,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ isDarkTheme, onThemeChange
           position: 'relative',
         }}
       >
-        {/* Mobile burger button */}
         <Button
           variant="icon"
-          onClick={() => setIsSidebarOpen((v) => !v)}
+          onClick={() => setIsSidebarOpen((value) => !value)}
           title="Открыть меню"
           className="burger-btn"
           style={{
@@ -118,21 +135,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ isDarkTheme, onThemeChange
           </svg>
         </Button>
 
-        <ChatWindow
-          chatTitle={activeChatId ? chatTitles[activeChatId] : undefined}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-        />
+        <ChatWindow chatId={chatId} />
       </main>
 
-      {/* Settings panel */}
-      <SettingsPanel
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        onThemeChange={onThemeChange}
-        isDarkTheme={isDarkTheme}
-      />
-
-      {/* Responsive styles injected */}
       <style>{`
         @media (max-width: 768px) {
           .sidebar-wrapper {
@@ -153,3 +158,14 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ isDarkTheme, onThemeChange
     </div>
   );
 };
+
+export const appRouter = createBrowserRouter([
+  {
+    path: '/',
+    element: <ChatLayout />,
+  },
+  {
+    path: '/chat/:id',
+    element: <ChatLayout />,
+  },
+]);

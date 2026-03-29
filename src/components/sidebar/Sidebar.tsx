@@ -1,38 +1,35 @@
 import React, { useState } from 'react';
 import { SearchInput } from './SearchInput';
 import { ChatList } from './ChatList';
-import type { Chat } from './ChatItem';
+import type { Chat } from '../../types/chat';
 import { Button } from '../ui/Button';
 
-const MOCK_CHATS: Chat[] = [
-  { id: '1', title: 'Помощь с кодом на TypeScript', lastMessageDate: '12 мар, 14:32' },
-  { id: '2', title: 'Анализ данных и визуализация', lastMessageDate: '12 мар, 11:05' },
-  { id: '3', title: 'Перевод документации по React', lastMessageDate: '11 мар, 20:18' },
-  { id: '4', title: 'Написание юнит-тестов Jest', lastMessageDate: '10 мар, 16:44' },
-  { id: '5', title: 'Оптимизация SQL-запросов', lastMessageDate: '9 мар, 09:30' },
-  { id: '6', title: 'Обзор кода pull request', lastMessageDate: '8 мар, 23:11' },
-];
-
 interface SidebarProps {
+  chats: Chat[];
   activeChatId: string | null;
   onSelectChat: (id: string) => void;
   onNewChat: () => void;
+  onRenameChat: (id: string) => void;
+  onDeleteChat: (id: string) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeChatId, onSelectChat, onNewChat }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  chats,
+  activeChatId,
+  onSelectChat,
+  onNewChat,
+  onRenameChat,
+  onDeleteChat,
+}) => {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredChats = MOCK_CHATS.filter((c) =>
-    c.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleEdit = (id: string) => {
-    console.log('Edit chat:', id);
-  };
-
-  const handleDelete = (id: string) => {
-    console.log('Delete chat:', id);
-  };
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredChats = chats.filter((chat) => {
+    if (!normalizedQuery) return true;
+    const title = chat.title.toLowerCase();
+    const lastMessage = chat.messages[chat.messages.length - 1]?.content.toLowerCase() ?? '';
+    return title.includes(normalizedQuery) || lastMessage.includes(normalizedQuery);
+  });
 
   return (
     <aside
@@ -120,8 +117,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeChatId, onSelectChat, on
         chats={filteredChats}
         activeChatId={activeChatId}
         onSelect={onSelectChat}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        onEdit={onRenameChat}
+        onDelete={onDeleteChat}
       />
     </aside>
   );

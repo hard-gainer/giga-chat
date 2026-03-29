@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Message } from './Message';
-import type { Message as ChatMessage } from '../../types/message';
+import type { Message as ChatMessage } from '../../types/chat';
 import { TypingIndicator } from './TypingIndicator';
 import { EmptyState } from '../ui/ErrorMessage';
 import styles from './MessageList.module.css';
