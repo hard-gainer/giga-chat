@@ -22,6 +22,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onDeleteChat,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const handleDeleteChat = (chatId: string) => {
+    if (window.confirm('Удалить этот чат?')) {
+      onDeleteChat(chatId);
+    }
+  };
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
   const filteredChats = chats.filter((chat) => {
@@ -118,7 +123,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         activeChatId={activeChatId}
         onSelect={onSelectChat}
         onEdit={onRenameChat}
-        onDelete={onDeleteChat}
+        onDelete={handleDeleteChat}
       />
     </aside>
   );

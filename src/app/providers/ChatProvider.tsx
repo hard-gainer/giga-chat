@@ -7,7 +7,8 @@ import {
   type GigaChatMessage,
 } from '../../api/gigachat';
 import { loadChatState, saveChatState } from '../../utils/storage';
-import type { Chat, ChatAction, ChatState, Message } from '../../types/chat';
+import { chatReducer, DEFAULT_CHAT_STATE } from '../../store/chatReducer';
+import type { Chat, ChatState, Message } from '../../types/chat';
 
 interface ChatProviderProps {
   auth: GigaChatAuthConfig;
@@ -24,88 +25,6 @@ interface ChatContextValue {
   stopGenerating: () => void;
   clearError: () => void;
 }
-
-const DEFAULT_CHAT_STATE: ChatState = {
-  chats: [],
-  activeChatId: null,
-  isLoading: false,
-  error: null,
-};
-
-const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
-  switch (action.type) {
-    case 'HYDRATE':
-      return action.payload;
-    case 'CREATE_CHAT':
-      return {
-        ...state,
-        chats: [action.payload, ...state.chats],
-        activeChatId: action.payload.id,
-      };
-    case 'SET_ACTIVE_CHAT':
-      return {
-        ...state,
-        activeChatId: action.payload,
-      };
-    case 'RENAME_CHAT': {
-      const chats = state.chats.map((chat) =>
-        chat.id === action.payload.chatId ? { ...chat, title: action.payload.title } : chat
-      );
-      return { ...state, chats };
-    }
-    case 'DELETE_CHAT': {
-      const chats = state.chats.filter((chat) => chat.id !== action.payload.chatId);
-      const activeChatId =
-        state.activeChatId === action.payload.chatId ? (chats[0]?.id ?? null) : state.activeChatId;
-      return { ...state, chats, activeChatId };
-    }
-    case 'ADD_MESSAGE': {
-      const chats = state.chats.map((chat) => {
-        if (chat.id !== action.payload.chatId) return chat;
-        return {
-          ...chat,
-          messages: [...chat.messages, action.payload.message],
-          updatedAt: action.payload.message.timestamp,
-        };
-      });
-      return { ...state, chats };
-    }
-    case 'APPEND_TO_MESSAGE': {
-      const chats = state.chats.map((chat) => {
-        if (chat.id !== action.payload.chatId) return chat;
-        return {
-          ...chat,
-          messages: chat.messages.map((message) =>
-            message.id === action.payload.messageId
-              ? { ...message, content: message.content + action.payload.chunk }
-              : message
-          ),
-        };
-      });
-      return { ...state, chats };
-    }
-    case 'SET_MESSAGE_CONTENT': {
-      const chats = state.chats.map((chat) => {
-        if (chat.id !== action.payload.chatId) return chat;
-        return {
-          ...chat,
-          messages: chat.messages.map((message) =>
-            message.id === action.payload.messageId
-              ? { ...message, content: action.payload.content }
-              : message
-          ),
-        };
-      });
-      return { ...state, chats };
-    }
-    case 'SET_LOADING':
-      return { ...state, isLoading: action.payload };
-    case 'SET_ERROR':
-      return { ...state, error: action.payload };
-    default:
-      return state;
-  }
-};
 
 const ChatContext = createContext<ChatContextValue | null>(null);
 

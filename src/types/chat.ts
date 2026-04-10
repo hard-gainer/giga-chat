@@ -24,7 +24,7 @@ export interface ChatState {
 
 export type ChatAction =
   | { type: 'HYDRATE'; payload: ChatState }
-  | { type: 'CREATE_CHAT'; payload: Chat }
+  | { type: 'CREATE_CHAT'; payload?: Chat }
   | { type: 'SET_ACTIVE_CHAT'; payload: string | null }
   | { type: 'RENAME_CHAT'; payload: { chatId: string; title: string } }
   | { type: 'DELETE_CHAT'; payload: { chatId: string } }
