@@ -1,5 +1,23 @@
 # React + TypeScript + Vite
 
+## Тесты
+
+Проект использует Vitest + React Testing Library для unit и component тестирования.
+
+### Запуск
+
+```bash
+npm test
+```
+
+### Что покрыто
+
+- reducer: CREATE_CHAT, ADD_MESSAGE, DELETE_CHAT, RENAME_CHAT;
+- компонент InputArea: отправка по кнопке и Enter, disabled-состояние при пустом вводе;
+- компонент Message: рендер user/assistant вариантов и кнопка копирования только для assistant;
+- компонент Sidebar: фильтрация чатов по поиску; подтверждение удаления;
+- утилиты storage: сохранение в localStorage, восстановление состояния, обработка невалидного JSON.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
