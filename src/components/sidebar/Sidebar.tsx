@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { SearchInput } from './SearchInput';
 import { ChatList } from './ChatList';
 import type { Chat } from '../../types/chat';
@@ -22,19 +22,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onDeleteChat,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const handleDeleteChat = (chatId: string) => {
+  const handleDeleteChat = useCallback((chatId: string) => {
     if (window.confirm('Удалить этот чат?')) {
       onDeleteChat(chatId);
     }
-  };
+  }, [onDeleteChat]);
 
-  const normalizedQuery = searchQuery.trim().toLowerCase();
-  const filteredChats = chats.filter((chat) => {
-    if (!normalizedQuery) return true;
-    const title = chat.title.toLowerCase();
-    const lastMessage = chat.messages[chat.messages.length - 1]?.content.toLowerCase() ?? '';
-    return title.includes(normalizedQuery) || lastMessage.includes(normalizedQuery);
-  });
+  const filteredChats = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    return chats.filter((chat) => {
+      if (!normalizedQuery) return true;
+      const title = chat.title.toLowerCase();
+      const lastMessage = chat.messages[chat.messages.length - 1]?.content.toLowerCase() ?? '';
+      return title.includes(normalizedQuery) || lastMessage.includes(normalizedQuery);
+    });
+  }, [chats, searchQuery]);
 
   return (
     <aside

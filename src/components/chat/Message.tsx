@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import rehypeHighlight from 'rehype-highlight';
+import React, { Suspense, lazy, useState } from 'react';
 import { Button } from '../ui/Button';
 import { AssistantAvatar } from '../ui/AssistantAvatar';
 import type { Message as ChatMessage, MessageRole } from '../../types/chat';
 import styles from './Message.module.css';
+
+const MarkdownRenderer = lazy(() =>
+  import('./MarkdownRenderer').then((module) => ({ default: module.MarkdownRenderer }))
+);
 
 interface MessageProps {
   message: ChatMessage;
@@ -37,7 +39,9 @@ export const Message: React.FC<MessageProps> = ({ message, variant }) => {
         <div className={styles.bubbleWrap}>
           <div className={`${styles.bubble} ${isUser ? styles.bubbleUser : styles.bubbleAssistant}`}>
             <div className={`${styles.markdownBody} markdown-body`}>
-              <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{message.content}</ReactMarkdown>
+              <Suspense fallback={<span>{message.content}</span>}>
+                <MarkdownRenderer content={message.content} />
+              </Suspense>
             </div>
           </div>
 

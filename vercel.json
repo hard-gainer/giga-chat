@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/proxy/gigachat/oauth",
+      "destination": "https://ngw.devices.sberbank.ru:9443/api/v2/oauth"
+    },
+    {
+      "source": "/proxy/gigachat/chat/completions",
+      "destination": "https://gigachat.devices.sberbank.ru/api/v1/chat/completions"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

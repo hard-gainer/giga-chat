@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { Button } from '../ui/Button';
 import type { Chat } from '../../types/chat';
 
@@ -10,7 +10,7 @@ interface ChatItemProps {
   onDelete: (id: string) => void;
 }
 
-export const ChatItem: React.FC<ChatItemProps> = ({ chat, isActive, onSelect, onEdit, onDelete }) => {
+const ChatItemComponent: React.FC<ChatItemProps> = ({ chat, isActive, onSelect, onEdit, onDelete }) => {
   const [hovered, setHovered] = useState(false);
   const lastMessage = chat.messages[chat.messages.length - 1];
   const lastMessageDate = new Date(chat.updatedAt).toLocaleString('ru-RU', {
@@ -114,3 +114,6 @@ export const ChatItem: React.FC<ChatItemProps> = ({ chat, isActive, onSelect, on
     </div>
   );
 };
+
+export const ChatItem = memo(ChatItemComponent);
+ChatItem.displayName = 'ChatItem';

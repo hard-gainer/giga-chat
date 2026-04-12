@@ -1,91 +1,111 @@
-# React + TypeScript + Vite
+# GigaChat Frontend
 
-## Тесты
+## Демо
 
-Проект использует Vitest + React Testing Library для unit и component тестирования.
+- Публичный URL: добавьте ваш URL после деплоя на Vercel/Netlify (например, `https://your-project.vercel.app`).
+- Скриншот анализа бандла: ![Bundle analysis](docs/bundle-analysis.png)
+- HTML-отчёт визуализатора: [docs/bundle-analysis.html](docs/bundle-analysis.html)
 
-### Запуск
+## Стек
+
+- React 19
+- TypeScript 5
+- React Router DOM 7
+- State management: React Context + useReducer
+- Vite 8
+- Vitest + React Testing Library
+- CSS Modules + global theme variables
+- Markdown/rendering: react-markdown + rehype-highlight + highlight.js (вынесены в lazy chunk)
+
+## Запуск локально
+
+1. Клонируйте репозиторий:
+
+```bash
+git clone <repo-url>
+cd JSProject
+```
+
+2. Установите зависимости:
+
+```bash
+npm install
+```
+
+3. Создайте `.env` на основе шаблона:
+
+```bash
+cp .env.example .env
+```
+
+4. Заполните переменные окружения.
+
+5. Запустите dev-сервер:
+
+```bash
+npm run dev
+```
+
+6. Запуск тестов:
 
 ```bash
 npm test
 ```
 
-### Что покрыто
+7. Аудит бандла:
 
-- reducer: CREATE_CHAT, ADD_MESSAGE, DELETE_CHAT, RENAME_CHAT;
-- компонент InputArea: отправка по кнопке и Enter, disabled-состояние при пустом вводе;
-- компонент Message: рендер user/assistant вариантов и кнопка копирования только для assistant;
-- компонент Sidebar: фильтрация чатов по поиску; подтверждение удаления;
-- утилиты storage: сохранение в localStorage, восстановление состояния, обработка невалидного JSON.
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run analyze:bundle
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Переменные окружения
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Переменная | Описание | Пример |
+|---|---|---|
+| `VITE_GIGACHAT_CREDENTIALS` | Base64-строка `client_id:client_secret`, используется для OAuth | `base64(...)` |
+| `VITE_GIGACHAT_SCOPE` | Scope для OAuth (`GIGACHAT_API_PERS`, `GIGACHAT_API_B2B`, `GIGACHAT_API_CORP`) | `GIGACHAT_API_PERS` |
+| `VITE_GIGACHAT_AUTH_URL` | URL OAuth endpoint через прокси | `/proxy/gigachat/oauth` |
+| `VITE_GIGACHAT_API_URL` | URL endpoint chat/completions через прокси | `/proxy/gigachat/chat/completions` |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Важно: реальные креды и токены не хранятся в коде и не коммитятся в репозиторий.
+
+## Оптимизации и устойчивость
+
+- Bundle audit:
+  - Использован `vite-bundle-visualizer`.
+  - Самые тяжёлые зависимости: `react-dom`, `react-router`, `highlight.js`.
+  - Проверено, что `react-markdown` и `highlight.js` вынесены в отдельный async chunk `MarkdownRenderer-*` и отсутствуют в `dist/assets/index-*.js`.
+- Ререндеры:
+  - `ChatItem` обёрнут в `React.memo`.
+  - фильтрация чатов в Sidebar через `useMemo`.
+  - `onSend`, `onRename`, `onDelete`, `onSelect`, `onNewChat` стабилизированы через `useCallback`.
+- Code splitting:
+  - `Sidebar` и `SettingsPanel` подключаются через `React.lazy + Suspense`.
+  - роуты `/` и `/chat/:id` загружаются через lazy route modules.
+- Error handling:
+  - добавлен классовый `ErrorBoundary` (`componentDidCatch`) для области сообщений.
+  - API-ошибки показываются под полем ввода через `ErrorMessage`.
+  - есть кнопка `Повторить` для UI-ошибок.
+
+## Деплой
+
+- Подготовлен конфиг [vercel.json](vercel.json) с:
+  - rewrites для SPA-маршрутов (`/(.*) -> /index.html`);
+  - проксированием GigaChat endpoints;
+- Шаблон env: [.env.example](.env.example).
+
+Перед публикацией:
+
+1. Добавьте env-переменные в Vercel/Netlify settings.
+2. Задеплойте проект.
+3. Проверьте маршруты `/` и `/chat/:id` в обычном и инкогнито-режиме.
+
+## Тесты
+
+Покрытие тестами:
+
+- reducer: `CREATE_CHAT`, `ADD_MESSAGE`, `DELETE_CHAT`, `RENAME_CHAT`;
+- `InputArea`: отправка по кнопке и Enter, disabled при пустом вводе;
+- `Message`: user/assistant рендер и кнопка копирования только для assistant;
+- `Sidebar`: фильтрация поиска и подтверждение удаления;
+- `storage`: сохранение, восстановление, обработка невалидного JSON.

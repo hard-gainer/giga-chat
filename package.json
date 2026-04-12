@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "analyze:bundle": "npx -y vite-bundle-visualizer --template treemap --sourcemap --open false --output docs/bundle-analysis.html && npx -y vite-bundle-visualizer --template raw-data --sourcemap --open false --output docs/bundle-analysis.json"
   },
   "dependencies": {
     "highlight.js": "^11.11.1",

@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { MessageList } from './MessageList';
 import { InputArea } from './InputArea';
 import { Button } from '../ui/Button';
+import { ErrorBoundary } from '../ErrorBoundary';
+import { ErrorMessage } from '../ui/ErrorMessage';
 import styles from './ChatWindow.module.css';
 import { useChat } from '../../app/providers/ChatProvider';
 
@@ -16,14 +18,35 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   chatTitle = 'Помощь с кодом на TypeScript',
   onOpenSettings,
 }) => {
-  const { state, sendMessage, stopGenerating } = useChat();
+  const { state, sendMessage, stopGenerating, clearError } = useChat();
   const activeId = chatId ?? state.activeChatId;
   const chat = state.chats.find((item) => item.id === activeId);
   const resolvedTitle = chat?.title ?? chatTitle;
 
-  const handleSend = async (text: string) => {
-    await sendMessage(activeId, text);
-  };
+  const handleSend = useCallback(
+    async (text: string) => {
+      try {
+        await sendMessage(activeId, text);
+      } catch {
+        // Network errors are mapped to provider state and shown below input.
+      }
+    },
+    [activeId, sendMessage]
+  );
+
+  const lastUserMessage = useMemo(() => {
+    const messages = chat?.messages ?? [];
+    for (let idx = messages.length - 1; idx >= 0; idx -= 1) {
+      if (messages[idx].role === 'user') return messages[idx].content;
+    }
+    return '';
+  }, [chat?.messages]);
+
+  const handleRetry = useCallback(async () => {
+    if (!lastUserMessage || state.isLoading) return;
+    clearError();
+    await sendMessage(activeId, lastUserMessage);
+  }, [activeId, clearError, lastUserMessage, sendMessage, state.isLoading]);
 
   return (
     <div className={styles.root}>
@@ -58,10 +81,20 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       </div>
 
       {/* Messages */}
-      <MessageList messages={chat?.messages ?? []} isTyping={state.isLoading} />
+      <ErrorBoundary fallbackTitle="Ошибка отображения сообщений. Попробуйте ещё раз.">
+        <MessageList messages={chat?.messages ?? []} isTyping={state.isLoading} />
+      </ErrorBoundary>
 
       {/* Input */}
       <InputArea onSend={handleSend} isLoading={state.isLoading} onStop={stopGenerating} />
+      {state.error && (
+        <div style={{ padding: '0 20px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <ErrorMessage message={state.error} />
+          <Button variant="secondary" size="sm" onClick={handleRetry} disabled={!lastUserMessage || state.isLoading}>
+            Повторить
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
