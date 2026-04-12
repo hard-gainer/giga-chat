@@ -2,7 +2,7 @@
 
 ## Демо
 
-- Публичный URL: добавьте ваш URL после деплоя на Vercel/Netlify (например, `https://your-project.vercel.app`).
+- Публичный URL: `https://giga-chat-psi.vercel.app/`.
 - Скриншот анализа бандла: ![Bundle analysis](docs/bundle-analysis.png)
 - HTML-отчёт визуализатора: [docs/bundle-analysis.html](docs/bundle-analysis.html)
 
@@ -67,7 +67,6 @@ npm run analyze:bundle
 | `VITE_GIGACHAT_AUTH_URL` | URL OAuth endpoint через прокси | `/proxy/gigachat/oauth` |
 | `VITE_GIGACHAT_API_URL` | URL endpoint chat/completions через прокси | `/proxy/gigachat/chat/completions` |
 
-Важно: реальные креды и токены не хранятся в коде и не коммитятся в репозиторий.
 
 ## Оптимизации и устойчивость
 
@@ -96,9 +95,9 @@ npm run analyze:bundle
 
 Перед публикацией:
 
-1. Добавьте env-переменные в Vercel/Netlify settings.
-2. Задеплойте проект.
-3. Проверьте маршруты `/` и `/chat/:id` в обычном и инкогнито-режиме.
+1. Добавьте env-переменные
+2. Задеплойте проект
+3. Проверьте маршруты `/` и `/chat/:id` в обычном и инкогнито-режиме
 
 ## Тесты
 
