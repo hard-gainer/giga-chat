@@ -15,7 +15,17 @@ const SettingsPanel = lazy(() =>
 export const ChatScreen: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { state, createChat, selectChat, renameChat, deleteChat } = useChat();
+  const {
+    state,
+    settings,
+    availableModels,
+    createChat,
+    selectChat,
+    renameChat,
+    deleteChat,
+    updateSettings,
+    refreshModels,
+  } = useChat();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDarkTheme, setIsDarkTheme] = useState(() =>
@@ -168,6 +178,10 @@ export const ChatScreen: React.FC = () => {
           onClose={() => setIsSettingsOpen(false)}
           onThemeChange={handleThemeChange}
           isDarkTheme={isDarkTheme}
+          settings={settings}
+          availableModels={availableModels}
+          onSaveSettings={updateSettings}
+          onRefreshModels={refreshModels}
         />
       </Suspense>
 

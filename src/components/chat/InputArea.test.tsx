@@ -32,4 +32,14 @@ describe('InputArea', () => {
 
     expect(screen.getByTitle('Отправить')).toBeDisabled();
   });
+
+  it('shows error when attached file is not an image', () => {
+    render(<InputArea onSend={vi.fn()} />);
+
+    const nonImageFile = new File(['text'], 'notes.txt', { type: 'text/plain' });
+    const hiddenInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(hiddenInput, { target: { files: [nonImageFile] } });
+
+    expect(screen.getByText(/Можно прикрепить только изображение/i)).toBeInTheDocument();
+  });
 });

@@ -4,6 +4,39 @@
   border-top: 1px solid var(--color-border);
 }
 
+.previewBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+}
+
+.previewImage {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.previewName {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.previewRemoveBtn {
+  color: var(--color-text-secondary);
+}
+
 .box {
   display: flex;
   align-items: flex-end;
@@ -64,6 +97,10 @@
   margin-top: 8px;
   text-align: center;
   opacity: 0.7;
+}
+
+.errorWrap {
+  margin-top: 8px;
 }
 
 @media (max-width: 768px) {

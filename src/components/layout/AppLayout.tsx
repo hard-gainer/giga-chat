@@ -4,6 +4,7 @@ import { ChatWindow } from '../chat/ChatWindow';
 import { SettingsPanel } from '../settings/SettingsPanel';
 import { Button } from '../ui/Button';
 import type { Chat } from '../../types/chat';
+import type { ChatRequestSettings } from '../../api/gigachat';
 
 interface AppLayoutProps {
   isDarkTheme: boolean;
@@ -15,6 +16,14 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ isDarkTheme, onThemeChange
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const chats: Chat[] = [];
+  const placeholderSettings: ChatRequestSettings & { systemPrompt: string } = {
+    model: 'GigaChat',
+    temperature: 0.7,
+    topP: 0.9,
+    maxTokens: 1024,
+    repetitionPenalty: 1,
+    systemPrompt: 'Ты полезный ИИ-ассистент.',
+  };
 
   const handleNewChat = () => {
     console.log('New chat created');
@@ -130,6 +139,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ isDarkTheme, onThemeChange
         onClose={() => setIsSettingsOpen(false)}
         onThemeChange={onThemeChange}
         isDarkTheme={isDarkTheme}
+        settings={placeholderSettings}
+        availableModels={['GigaChat', 'GigaChat-Plus', 'GigaChat-Pro', 'GigaChat-Max']}
+        onSaveSettings={() => undefined}
+        onRefreshModels={async () => undefined}
       />
 
       {/* Responsive styles injected */}

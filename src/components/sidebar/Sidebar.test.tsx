@@ -16,7 +16,10 @@ const chats: Chat[] = [
     title: 'TypeScript советы',
     createdAt: '2026-01-01T11:00:00.000Z',
     updatedAt: '2026-01-01T11:00:00.000Z',
-    messages: [{ id: 'm2', role: 'assistant', content: 'Про типы', timestamp: '11:00' }],
+    messages: [
+      { id: 'm2', role: 'assistant', content: 'Старое важное сообщение', timestamp: '10:30' },
+      { id: 'm3', role: 'assistant', content: 'Последний ответ без ключевого слова', timestamp: '11:00' },
+    ],
   },
 ];
 
@@ -50,6 +53,25 @@ describe('Sidebar', () => {
 
     expect(screen.getByText('React вопросы')).toBeInTheDocument();
     expect(screen.getByText('TypeScript советы')).toBeInTheDocument();
+  });
+
+  it('filters chats by any message content, not only last message', () => {
+    renderSidebar();
+
+    fireEvent.change(screen.getByPlaceholderText('Поиск чатов...'), {
+      target: { value: 'Старое важное' },
+    });
+
+    expect(screen.getByText('TypeScript советы')).toBeInTheDocument();
+    expect(screen.queryByText('React вопросы')).not.toBeInTheDocument();
+  });
+
+  it('displays chat date metadata instead of last message preview text', () => {
+    renderSidebar();
+
+    expect(screen.queryByText('Про хуки')).not.toBeInTheDocument();
+    expect(screen.queryByText('Последний ответ без ключевого слова')).not.toBeInTheDocument();
+    expect(screen.getAllByText(/Последнее сообщение:/i).length).toBeGreaterThan(0);
   });
 
   it('asks for confirmation when delete button is clicked', () => {

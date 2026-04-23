@@ -1,24 +1,25 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '../ui/Button';
 import { Toggle } from '../ui/Toggle';
 import { Slider } from '../ui/Slider';
+import type { ChatRequestSettings } from '../../api/gigachat';
 
-type GigaChatModel = 'GigaChat' | 'GigaChat-Plus' | 'GigaChat-Pro' | 'GigaChat-Max';
-
-interface SettingsState {
-  model: GigaChatModel;
-  temperature: number;
-  topP: number;
-  maxTokens: number;
+interface SettingsState extends ChatRequestSettings {
   systemPrompt: string;
   darkTheme: boolean;
 }
+
+const DEFAULT_MODELS = ['GigaChat', 'GigaChat-Plus', 'GigaChat-Pro', 'GigaChat-Max'];
 
 interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
   onThemeChange: (dark: boolean) => void;
   isDarkTheme: boolean;
+  settings: ChatRequestSettings & { systemPrompt: string };
+  availableModels: string[];
+  onSaveSettings: (settings: ChatRequestSettings & { systemPrompt: string }) => void;
+  onRefreshModels: () => Promise<void>;
 }
 
 const DEFAULT_SETTINGS: SettingsState = {
@@ -26,6 +27,7 @@ const DEFAULT_SETTINGS: SettingsState = {
   temperature: 0.7,
   topP: 0.9,
   maxTokens: 1024,
+  repetitionPenalty: 1,
   systemPrompt: 'Ты — полезный ИИ-ассистент GigaChat. Отвечай на русском языке, ясно и по существу.',
   darkTheme: false,
 };
@@ -35,24 +37,54 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   onClose,
   onThemeChange,
   isDarkTheme,
+  settings: currentSettings,
+  availableModels,
+  onSaveSettings,
+  onRefreshModels,
 }) => {
-  const [settings, setSettings] = useState<SettingsState>({
+  const [settings, setSettings] = useState<SettingsState>(() => ({
     ...DEFAULT_SETTINGS,
+    ...currentSettings,
     darkTheme: isDarkTheme,
-  });
+  }));
+
+  const modelOptions = useMemo(
+    () => (availableModels.length > 0 ? availableModels : DEFAULT_MODELS),
+    [availableModels]
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setSettings({
+      ...DEFAULT_SETTINGS,
+      ...currentSettings,
+      darkTheme: isDarkTheme,
+    });
+  }, [isOpen, currentSettings, isDarkTheme]);
 
   const update = <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = () => {
+    onSaveSettings({
+      model: settings.model,
+      temperature: settings.temperature,
+      topP: settings.topP,
+      maxTokens: settings.maxTokens,
+      repetitionPenalty: settings.repetitionPenalty,
+      systemPrompt: settings.systemPrompt,
+    });
     onThemeChange(settings.darkTheme);
     onClose();
-    console.log('Settings saved:', settings);
   };
 
   const handleReset = () => {
-    setSettings({ ...DEFAULT_SETTINGS, darkTheme: isDarkTheme });
+    setSettings({
+      ...DEFAULT_SETTINGS,
+      darkTheme: isDarkTheme,
+      model: modelOptions[0] ?? DEFAULT_SETTINGS.model,
+    });
   };
 
   if (!isOpen) return null;
@@ -141,7 +173,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             <select
               id="model-select"
               value={settings.model}
-              onChange={(e) => update('model', e.target.value as GigaChatModel)}
+              onChange={(e) => update('model', e.target.value)}
               style={{
                 padding: '9px 12px',
                 border: '1px solid var(--color-border-input)',
@@ -154,11 +186,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 cursor: 'pointer',
               }}
             >
-              <option value="GigaChat">GigaChat</option>
-              <option value="GigaChat-Plus">GigaChat-Plus</option>
-              <option value="GigaChat-Pro">GigaChat-Pro</option>
-              <option value="GigaChat-Max">GigaChat-Max</option>
+              {modelOptions.map((modelName) => (
+                <option value={modelName} key={modelName}>{modelName}</option>
+              ))}
             </select>
+            <Button variant="secondary" size="sm" onClick={() => void onRefreshModels()}>
+              Обновить список моделей
+            </Button>
           </div>
 
           {/* Temperature */}
@@ -179,6 +213,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             step={0.05}
             value={settings.topP}
             onChange={(v) => update('topP', v)}
+          />
+
+          <Slider
+            label="Repetition Penalty"
+            min={0}
+            max={2}
+            step={0.1}
+            value={settings.repetitionPenalty}
+            onChange={(v) => update('repetitionPenalty', v)}
           />
 
           {/* Max Tokens */}

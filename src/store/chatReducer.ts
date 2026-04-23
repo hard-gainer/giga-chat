@@ -55,7 +55,7 @@ export const chatReducer = (state: ChatState, action: ChatAction): ChatState => 
         return {
           ...chat,
           messages: [...chat.messages, action.payload.message],
-          updatedAt: action.payload.message.timestamp,
+          updatedAt: new Date().toISOString(),
         };
       });
       return { ...state, chats };

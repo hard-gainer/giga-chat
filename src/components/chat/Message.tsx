@@ -38,6 +38,13 @@ export const Message: React.FC<MessageProps> = ({ message, variant }) => {
 
         <div className={styles.bubbleWrap}>
           <div className={`${styles.bubble} ${isUser ? styles.bubbleUser : styles.bubbleAssistant}`}>
+            {message.imageDataUrl && (
+              <img
+                src={message.imageDataUrl}
+                alt="Вложенное изображение"
+                className={styles.inlineImage}
+              />
+            )}
             <div className={`${styles.markdownBody} markdown-body`}>
               <Suspense fallback={<span>{message.content}</span>}>
                 <MarkdownRenderer content={message.content} />

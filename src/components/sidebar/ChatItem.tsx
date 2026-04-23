@@ -12,7 +12,7 @@ interface ChatItemProps {
 
 const ChatItemComponent: React.FC<ChatItemProps> = ({ chat, isActive, onSelect, onEdit, onDelete }) => {
   const [hovered, setHovered] = useState(false);
-  const lastMessage = chat.messages[chat.messages.length - 1];
+  const hasMessages = chat.messages.length > 0;
   const lastMessageDate = new Date(chat.updatedAt).toLocaleString('ru-RU', {
     day: '2-digit',
     month: 'short',
@@ -66,7 +66,7 @@ const ChatItemComponent: React.FC<ChatItemProps> = ({ chat, isActive, onSelect, 
             textOverflow: 'ellipsis',
           }}
         >
-          {lastMessage?.content || lastMessageDate}
+          {hasMessages ? `Последнее сообщение: ${lastMessageDate}` : `Создан: ${lastMessageDate}`}
         </div>
       </div>
 

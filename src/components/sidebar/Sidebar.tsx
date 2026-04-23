@@ -33,8 +33,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return chats.filter((chat) => {
       if (!normalizedQuery) return true;
       const title = chat.title.toLowerCase();
-      const lastMessage = chat.messages[chat.messages.length - 1]?.content.toLowerCase() ?? '';
-      return title.includes(normalizedQuery) || lastMessage.includes(normalizedQuery);
+      const allMessages = chat.messages.map((message) => message.content.toLowerCase()).join('\n');
+      return title.includes(normalizedQuery) || allMessages.includes(normalizedQuery);
     });
   }, [chats, searchQuery]);
 

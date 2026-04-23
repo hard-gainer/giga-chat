@@ -1,8 +1,11 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import {
   createChatCompletion,
+  getAvailableModels,
   requestAccessToken,
   streamChatCompletion,
+  type ChatRequestSettings,
+  type GigaChatContentPart,
   type GigaChatAuthConfig,
   type GigaChatMessage,
 } from '../../api/gigachat';
@@ -17,16 +20,31 @@ interface ChatProviderProps {
 
 interface ChatContextValue {
   state: ChatState;
+  settings: ChatRequestSettings & { systemPrompt: string };
+  availableModels: string[];
   createChat: () => string;
   selectChat: (chatId: string | null) => void;
   renameChat: (chatId: string, title: string) => void;
   deleteChat: (chatId: string) => void;
-  sendMessage: (chatId: string | null, content: string) => Promise<string>;
+  updateSettings: (nextSettings: ChatRequestSettings & { systemPrompt: string }) => void;
+  refreshModels: () => Promise<void>;
+  sendMessage: (chatId: string | null, content: string, imageDataUrl?: string | null) => Promise<string>;
   stopGenerating: () => void;
   clearError: () => void;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
+
+const DEFAULT_MODELS = ['GigaChat', 'GigaChat-Plus', 'GigaChat-Pro', 'GigaChat-Max'];
+
+const DEFAULT_SETTINGS: ChatRequestSettings & { systemPrompt: string } = {
+  model: 'GigaChat',
+  temperature: 0.7,
+  topP: 0.9,
+  maxTokens: 1024,
+  repetitionPenalty: 1,
+  systemPrompt: 'Ты полезный ИИ-ассистент. Отвечай кратко, структурно и по делу на русском языке.',
+};
 
 const nowIso = () => new Date().toISOString();
 
@@ -56,10 +74,21 @@ const makeNewChat = (state: ChatState): Chat => {
   };
 };
 
-const mapMessagesForApi = (messages: Message[]): GigaChatMessage[] => {
+const mapMessagesForApi = (messages: Message[], systemPrompt: string): GigaChatMessage[] => {
   const dialogue = messages
     .filter((message) => message.role === 'user' || message.role === 'assistant' || message.role === 'system')
-    .map((message) => ({ role: message.role, content: message.content }));
+    .map((message) => {
+      if (message.role === 'user' && message.imageDataUrl) {
+        const parts: GigaChatContentPart[] = [];
+        if (message.content.trim()) {
+          parts.push({ type: 'text', text: message.content });
+        }
+        parts.push({ type: 'image_url', image_url: { url: message.imageDataUrl } });
+        return { role: message.role, content: parts };
+      }
+
+      return { role: message.role, content: message.content };
+    });
 
   const hasSystem = dialogue.some((message) => message.role === 'system');
   if (hasSystem) return dialogue;
@@ -67,7 +96,7 @@ const mapMessagesForApi = (messages: Message[]): GigaChatMessage[] => {
   return [
     {
       role: 'system',
-      content: 'Ты полезный ИИ-ассистент. Отвечай кратко, структурно и по делу на русском языке.',
+      content: systemPrompt,
     },
     ...dialogue,
   ];
@@ -75,13 +104,20 @@ const mapMessagesForApi = (messages: Message[]): GigaChatMessage[] => {
 
 export const ChatProvider: React.FC<ChatProviderProps> = ({ auth, children }) => {
   const [state, dispatch] = useReducer(chatReducer, DEFAULT_CHAT_STATE);
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [availableModels, setAvailableModels] = useState<string[]>(DEFAULT_MODELS);
   const stateRef = useRef(state);
+  const settingsRef = useRef(settings);
   const abortRef = useRef<AbortController | null>(null);
   const tokenRef = useRef<{ token: string; expiresAt: number } | null>(null);
 
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
+
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
 
   useEffect(() => {
     const persisted = loadChatState();
@@ -131,6 +167,28 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ auth, children }) =>
     return next.access_token;
   }, [auth]);
 
+  const refreshModels = useCallback(async () => {
+    const accessToken = await ensureToken();
+    const models = await getAvailableModels({ accessToken });
+    if (models.length > 0) {
+      setAvailableModels(models);
+
+      if (!models.includes(settingsRef.current.model)) {
+        setSettings((current) => ({ ...current, model: models[0] }));
+      }
+    }
+  }, [ensureToken]);
+
+  useEffect(() => {
+    void refreshModels().catch(() => {
+      // Keep fallback models if backend models endpoint is unavailable.
+    });
+  }, [refreshModels]);
+
+  const updateSettings = useCallback((nextSettings: ChatRequestSettings & { systemPrompt: string }) => {
+    setSettings(nextSettings);
+  }, []);
+
   const stopGenerating = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
@@ -142,9 +200,10 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ auth, children }) =>
   }, []);
 
   const sendMessage = useCallback(
-    async (chatId: string | null, content: string) => {
+    async (chatId: string | null, content: string, imageDataUrl?: string | null) => {
       const text = content.trim();
-      if (!text || stateRef.current.isLoading) {
+      const image = imageDataUrl?.trim() ? imageDataUrl : null;
+      if ((!text && !image) || stateRef.current.isLoading) {
         return chatId ?? stateRef.current.activeChatId ?? '';
       }
 
@@ -160,13 +219,14 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ auth, children }) =>
       const userMessage: Message = {
         id: crypto.randomUUID(),
         role: 'user',
-        content: text,
+        content: text || 'Изображение',
         timestamp: nowTime(),
+        imageDataUrl: image,
       };
       dispatch({ type: 'ADD_MESSAGE', payload: { chatId: targetChatId, message: userMessage } });
 
       if (targetChat.messages.length === 0) {
-        const autoTitle = truncateTitle(text) || targetChat.title || 'Новый чат';
+        const autoTitle = truncateTitle(text) || (image ? 'Диалог с изображением' : targetChat.title) || 'Новый чат';
         dispatch({ type: 'RENAME_CHAT', payload: { chatId: targetChatId, title: autoTitle } });
       }
 
@@ -184,7 +244,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ auth, children }) =>
       const abortController = new AbortController();
       abortRef.current = abortController;
 
-      const apiMessages = mapMessagesForApi([...targetChat.messages, userMessage]);
+      const currentSettings = settingsRef.current;
+      const apiMessages = mapMessagesForApi([...targetChat.messages, userMessage], currentSettings.systemPrompt);
 
       try {
         const accessToken = await ensureToken();
@@ -195,6 +256,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ auth, children }) =>
           await streamChatCompletion({
             accessToken,
             messages: apiMessages,
+            settings: currentSettings,
             signal: abortController.signal,
             onToken: (token) => {
               streamed = true;
@@ -218,6 +280,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ auth, children }) =>
             const responseText = await createChatCompletion({
               accessToken,
               messages: apiMessages,
+              settings: currentSettings,
               signal: abortController.signal,
             });
             dispatch({
@@ -261,15 +324,32 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ auth, children }) =>
   const value = useMemo<ChatContextValue>(
     () => ({
       state,
+      settings,
+      availableModels,
       createChat,
       selectChat,
       renameChat,
       deleteChat,
+      updateSettings,
+      refreshModels,
       sendMessage,
       stopGenerating,
       clearError,
     }),
-    [state, createChat, selectChat, renameChat, deleteChat, sendMessage, stopGenerating, clearError]
+    [
+      state,
+      settings,
+      availableModels,
+      createChat,
+      selectChat,
+      renameChat,
+      deleteChat,
+      updateSettings,
+      refreshModels,
+      sendMessage,
+      stopGenerating,
+      clearError,
+    ]
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

@@ -24,9 +24,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const resolvedTitle = chat?.title ?? chatTitle;
 
   const handleSend = useCallback(
-    async (text: string) => {
+    async (text: string, imageDataUrl?: string | null) => {
       try {
-        await sendMessage(activeId, text);
+        await sendMessage(activeId, text, imageDataUrl);
       } catch {
         // Network errors are mapped to provider state and shown below input.
       }
