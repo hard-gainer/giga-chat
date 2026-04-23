@@ -3,7 +3,7 @@
 ## Демо
 
 - Видео-демо проекта: [https://disk.360.yandex.ru/d/xekXIbIH4Dp0kQ](https://disk.360.yandex.ru/d/xekXIbIH4Dp0kQ)
-- Публичный URL: `https://giga-chat-psi.vercel.app/`.
+- Публичный URL: [https://giga-chat-psi.vercel.app/](https://giga-chat-psi.vercel.app/).
 - Скриншот анализа бандла: ![Bundle analysis](docs/bundle-analysis.png)
 - HTML-отчёт визуализатора: [docs/bundle-analysis.html](docs/bundle-analysis.html)
 
